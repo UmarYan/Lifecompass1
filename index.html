@@ -88,8 +88,8 @@ function renderSmartSuggestions(){
 let box=document.getElementById('smartSuggestions');if(!box)return;
 let scored=domains.map((d,i)=>({i,name:d[0],s:score(i),rated:d[1].filter((_,j)=>Number.isFinite(data.ratings[i+'-'+j])).length,reflection:(data.reflections[i]||'').trim()})).filter(x=>x.s!=null).sort((a,b)=>a.s-b.s).slice(0,3);
 box.innerHTML=scored.length?scored.map((x,k)=>`<div class="list-item"><h4>${k+1}. ${escapeHtml(x.name)} <span class="pill">${fmt(x.s)}/10</span></h4><p>${x.s<=4?'High attention suggested':x.s<=6?'Potential improvement area':'Maintain and strengthen'} · ${x.rated}/5 questions answered</p><p>${escapeHtml(smartActionMap[x.i][0])}</p><button type="button" class="secondary" data-suggest-goal="${x.i}">Add as 90-day priority</button></div>`).join(''):'<p class="muted">কিছু assessment rating দেওয়ার পর suggestions দেখা যাবে।</p>';
-box.querySelectorAll('[data-suggest-goal]').forEach(btn=>btn.onclick=()=>addSuggestedGoal(Number(btn.dataset.suggestGoal)));
-let suggestBtn=document.getElementById('suggestPriorities');if(suggestBtn)suggestBtn.onclick=addTopSuggestedPriorities;
+
+
 }
 function addSuggestedGoal(index){
 if(!Number.isInteger(index)||index<0||index>=domains.length)return false;
@@ -113,6 +113,27 @@ function show(view){document.querySelectorAll('.view').forEach(v=>v.classList.to
 document.getElementById('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>show(b.dataset.view));document.getElementById('startAssessment').onclick=()=>show('assessment');document.getElementById('domainReflection').oninput=e=>{let badge=document.getElementById('saveStatus');badge.textContent='Saving…';badge.classList.add('save-pending');data.reflections[current]=e.target.value;save();badge.textContent='Saved ✓';badge.classList.remove('save-pending')};document.getElementById('prevDomain').onclick=()=>{saveCurrentReflection();current=Math.max(0,current-1);renderDomain()};document.getElementById('nextDomain').onclick=()=>{saveCurrentReflection();current=Math.min(14,current+1);renderDomain();if(current===14)toast('শেষ Domain — উত্তরগুলো review করো')};document.getElementById('newReview').onclick=()=>{let scores=domains.map((_,i)=>score(i)),available=scores.filter(x=>x!=null),overall=available.length?available.reduce((a,b)=>a+b,0)/available.length:null;data.reviews.push({date:new Date().toLocaleDateString('en-CA'),overall,done:completedPct(),scores});save();renderReviews();toast('Review snapshot saved')};
 document.querySelectorAll('[data-analysis]').forEach(el=>el.oninput=()=>{data.analysis[el.dataset.analysis]=el.value;save()});document.getElementById('saveAnalysis').onclick=()=>{document.querySelectorAll('[data-analysis]').forEach(el=>data.analysis[el.dataset.analysis]=el.value);save();toast('Analysis saved')};document.getElementById('addGoal').onclick=()=>openGoal();document.getElementById('cancelGoal').onclick=()=>document.getElementById('goalForm').hidden=true;document.getElementById('saveGoal').onclick=()=>{let title=document.getElementById('goalTitle').value.trim();if(!title){toast('Goal title লিখো');return}let g={title,domain:+document.getElementById('goalDomain').value,startDate:document.getElementById('goalStartDate').value,date:document.getElementById('goalDate').value,status:document.getElementById('goalStatus').value,milestones:document.getElementById('goalMilestones').value,milestoneDone:editingGoal==null?[]:(data.goals[editingGoal].milestoneDone||[]),why:document.getElementById('goalWhy').value,steps:document.getElementById('goalSteps').value,stepDone:editingGoal==null?[]:(data.goals[editingGoal].stepDone||[])};if(editingGoal==null){if(data.goals.length>=3&&!confirm('৩টির বেশি Priority যোগ করতে চাও? একসঙ্গে কম লক্ষ্য রাখাই সাধারণত সহজ।'))return;data.goals.push(g)}else data.goals[editingGoal]=g;save();renderGoals();document.getElementById('goalForm').hidden=true;toast('Priority saved')};document.getElementById('savePlanMeta').onclick=()=>{data.plan={start:document.getElementById('planStart').value,vision:document.getElementById('planVision').value,priorities:document.getElementById('planPriorities').value};save();toast('Plan overview saved')};document.getElementById('saveWeek').onclick=()=>{document.querySelectorAll('[data-week]').forEach(el=>data.weekly[el.dataset.week]=el.value);save();toast('Weekly check-in saved')};
 document.getElementById('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='LifeCompass-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);toast('Backup exported')};document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();document.getElementById('importFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let d=JSON.parse(reader.result);if(!d.ratings||!d.goals||!d.reviews)throw Error('Invalid backup');if(confirm('বর্তমান ডেটা imported backup দিয়ে replace হবে। Continue?')){data=d;save();renderDomain();renderAnalysis();renderPlan();toast('Backup restored')}}catch(err){toast('Backup file valid নয়')}e.target.value=''};reader.readAsText(f)};document.getElementById('csvBtn').onclick=()=>{let rows=[['Domain','Score'],...domains.map((d,i)=>[d[0],score(i)==null?'':score(i).toFixed(2)])],csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='LifeCompass-scorecard.csv';a.click();URL.revokeObjectURL(a.href)};
+
+
+// Robust delegated handling for Smart Priority controls (dynamic cards/buttons).
+document.addEventListener('click',function(e){
+  const addBtn=e.target.closest('button[data-suggest-goal]');
+  if(addBtn){
+    e.preventDefault();
+    const domainIndex=Number(addBtn.getAttribute('data-suggest-goal'));
+    try{
+      const added=addSuggestedGoal(domainIndex);
+      if(added){renderPlan();renderDashboard();}
+    }catch(err){console.error('Add priority failed:',err);toast('Priority যোগ করা যায়নি — আবার চেষ্টা করো');}
+    return;
+  }
+  const suggestBtn=e.target.closest('#suggestPriorities');
+  if(suggestBtn){
+    e.preventDefault();
+    try{addTopSuggestedPriorities();}
+    catch(err){console.error('Suggest priorities failed:',err);toast('Suggestions তৈরি করা যায়নি — আবার চেষ্টা করো');}
+  }
+},true);
 
 // Upper-right menu: keep navigation and secondary tools organized in one place.
 const menuTrigger=document.getElementById('menuTrigger'),appMenu=document.getElementById('appMenu');
