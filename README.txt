@@ -1,17 +1,21 @@
-LifeCompass PWA v0.9
+LifeCompass PWA v0.12 — Debug Mode
 
-This update builds on v0.7 and consolidates the planned improvements into one package.
-- Assessment ratings and reflections autosave locally; global and assessment save status indicators.
-- Domain tabs show complete/partial state; assessment completion and answer counts remain visible.
-- Dashboard includes overall scores, priorities, domain completion, and goal action progress summary.
-- Goals retain start/target dates, status, milestones and actionable progress checkboxes.
-- Upper-right menu icon groups navigation, install, backup/restore, CSV export, review snapshot, and report PDF actions.
-- Existing assessment report, review comparison, history, PWA install support and local backup remain.
+Built from the v0.11 base. Adds a phone-accessible Debug Mode to help investigate Smart Priority button failures.
 
-Deploy the extracted files to an HTTPS host (e.g. GitHub Pages). On Android Chrome, use Install App from the menu or browser menu > Add to Home screen.
-Data is stored locally in this browser; export backups regularly.
+Debug Mode (upper-right menu > Debug Mode / Error Log):
+- Captures technical click/action trace for Add as 90-day priority and Suggest priorities.
+- Captures JavaScript window errors and unhandled promise rejections.
+- Includes save/render failures and stack traces when available.
+- Copy Error Log copies the trace; Clear Log clears it; Close hides the panel.
+- Logs are kept in memory for this page session and do not include Assessment ratings or reflection text.
 
-Fix: Smart Priority Suggestions button and Add as 90-day priority actions now use robust delegated click handling; duplicate domain priorities are checked consistently (including legacy string domain values).
+How to reproduce and share the issue:
+1. Deploy all files to HTTPS GitHub Pages.
+2. Open LifeCompass and navigate to Smart Priority Suggestions.
+3. Open upper-right menu > Debug Mode / Error Log.
+4. Tap Add as 90-day priority or Suggest priorities.
+5. Reopen Debug Mode, tap Copy Error Log, and paste the copied log into ChatGPT.
 
+Existing data, assessment, goals, review history, reports, backup/restore, menu, and Android PWA install support are retained. Android PNG icons only; Apple-specific icon and SVG assets are omitted.
 
-v0.9 button fix: individual Add as 90-day priority buttons now use direct click handlers. Suggest priorities adds the three lowest-scoring rated domains into the 90-day plan, skipping duplicates, and shows a confirmation. Apple/iOS-specific icons and metadata plus SVG icon are omitted; Android PNG icons remain.
+Validation: JS syntax, Service Worker syntax, Manifest JSON, and ZIP integrity checked. Browser/device testing not performed.
