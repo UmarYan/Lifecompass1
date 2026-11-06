@@ -1,4 +1,4 @@
-LifeCompass PWA v0.8
+LifeCompass PWA v0.9
 
 This update builds on v0.7 and consolidates the planned improvements into one package.
 - Assessment ratings and reflections autosave locally; global and assessment save status indicators.
@@ -12,3 +12,6 @@ Deploy the extracted files to an HTTPS host (e.g. GitHub Pages). On Android Chro
 Data is stored locally in this browser; export backups regularly.
 
 Fix: Smart Priority Suggestions button and Add as 90-day priority actions now use robust delegated click handling; duplicate domain priorities are checked consistently (including legacy string domain values).
+
+
+v0.9 button fix: individual Add as 90-day priority buttons now use direct click handlers. Suggest priorities adds the three lowest-scoring rated domains into the 90-day plan, skipping duplicates, and shows a confirmation. Apple/iOS-specific icons and metadata plus SVG icon are omitted; Android PNG icons remain.
